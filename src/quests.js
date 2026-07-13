@@ -114,9 +114,9 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           caughtUnfiled.push(bugDef);
           persist();
           hud.setBugs(bugsCaught, BUGS.length);
-          hud.toast(`🐛 ${bugDef.name} squashed! · ${bugDef.chapter} unlocked`);
+          hud.toast(`${bugDef.name} squashed · ${bugDef.chapter} unlocked`);
           if (bugsCaught === 1) {
-            setTimeout(() => hud.toast('📌 file the report on the kanban board (city district)', 3400), 1400);
+            setTimeout(() => hud.toast('file the report on the kanban board (city district)', 3400), 1400);
           }
           if (bugsCaught === BUGS.length) {
             setTimeout(() => {
@@ -182,7 +182,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     incident = TRIGGERED;
     alertTarget = 1;
     hud.setAlert(true);
-    hud.toast('⚠ NEW MISSION: production incident!');
+    hud.toast('NEW MISSION: production incident!');
     opsMarker.visible = true;
     opsBot.bubble.visible = false;
     world.beacon.material.opacity = 0.95;
@@ -198,7 +198,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     alertTarget = 0;
     hud.setAlert(false);
     hud.setBadge(true);
-    hud.toast('🛡 Badge earned: INCIDENT COMMANDER');
+    hud.toast('Badge earned: INCIDENT COMMANDER');
     confetti.burst(player.position, 50, 3);
     rackMarker.visible = false;
     world.beacon.material.opacity = 0;
@@ -219,7 +219,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           incident = BRIEFED;
           opsMarker.visible = false;
           terminalMarker.visible = true;
-          hud.toast('🔍 Check the LOGS TERMINAL (city district)');
+          hud.toast('Check the LOGS TERMINAL (city district)');
         });
       } else if (incident === BRIEFED) {
         dialog.show(INCIDENT.npcWaitInvestigate);
@@ -262,7 +262,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           incident = INVESTIGATED;
           terminalMarker.visible = false;
           rackMarker.visible = true;
-          hud.toast('🧯 Root cause found — back to the PROD rack (server graveyard)!');
+          hud.toast('Root cause found. Back to the PROD rack in the server graveyard!');
         });
       } else {
         dialog.show(INCIDENT.terminalIdle);
@@ -316,8 +316,8 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         sfx.pop();
         const left = caughtUnfiled.length;
         hud.toast(left > 0
-          ? `📌 ${bugDef.name} filed · ${bugsFiled}/${BUGS.length} — ${left} more report${left > 1 ? 's' : ''} to file`
-          : `📌 ${bugDef.name} filed · ${bugsFiled}/${BUGS.length}`);
+          ? `${bugDef.name} filed · ${bugsFiled}/${BUGS.length} · ${left} more to file`
+          : `${bugDef.name} filed · ${bugsFiled}/${BUGS.length}`);
         if (bugsFiled === BUGS.length) {
           confetti.burst(spots.kanban, 30, 2.5);
         }
@@ -337,7 +337,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
       if (!ciIntroduced) {
         ciIntroduced = true;
         dialog.show(CITY.engineerIntro, () => {
-          hud.toast('🤖 NEW TASK: automate the regression suite (CI desk)');
+          hud.toast('NEW TASK: automate the regression suite (CI desk)');
         });
       } else if (ciDone) {
         dialog.show(CITY.engineerDone);
@@ -363,7 +363,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         world.ciScreen.mat.color.set(C.screenGreen);
         world.ciScreen.mat.emissive.set(C.screenGreen);
         world.ciScreen.mat.emissiveIntensity = 0.6;
-        hud.toast('✅ Regression suite automated — pipeline GREEN');
+        hud.toast('Regression suite automated. Pipeline GREEN');
         confetti.burst(spots.ciDesk, 24, 2);
       });
     },
@@ -445,13 +445,13 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         bobber.visible = true;
         fishingIt.label = 'Reel in';
         sfx.cast();
-        hud.toast('🎣 line cast… wait for the tug');
+        hud.toast('line cast… wait for the tug');
       } else if (fishState === 'waiting') {
         fishState = 'idle';
         bobber.visible = false;
         fishingIt.label = 'Fish';
         sfx.miss();
-        hud.toast('💨 too eager — patience is a QA virtue');
+        hud.toast('too eager. patience is a QA virtue');
       } else {
         fishState = 'idle';
         bobber.visible = false;
@@ -461,7 +461,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         // the rare one carries a war story — every toy pays out content
         const rare = !goldenCaught && (Math.random() < 0.08 || fishCount === 7);
         const name = rare ? FISH_RARE : FISH[Math.floor(Math.random() * FISH.length)];
-        hud.toast(`🐟 caught ${name}! · ${fishCount} landed`, 3200);
+        hud.toast(`caught ${name}! · ${fishCount} landed`, 3200);
         confetti.burst(bobber.position, rare ? 40 : 16, 2);
         if (rare) {
           goldenCaught = true;
@@ -487,7 +487,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         g.timer = 45; // it regrows — regressions always do
         harvested++;
         sfx.pop();
-        hud.toast(`🎃 ripe test case harvested · ${harvested} in the basket`);
+        hud.toast(`ripe test case harvested · ${harvested} in the basket`);
         confetti.burst(g.pos, 8, 1);
         // clearing the whole row earns the regression-testing story
         if (!harvestStoryTold && world.gourds.every((gg) => !gg.fruit.visible)) {
@@ -508,7 +508,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     onInteract() {
       dog.excite();
       sfx.pet();
-      hud.toast('🐕 Bug the dog approves. Morale fully restored.');
+      hud.toast('Bug the dog approves. Morale fully restored.');
       confetti.burst(dog.root.position, 10, 1.2);
     },
   });
@@ -545,7 +545,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         hud.setBadge(true);
       }
       if (bugsCaught > 0 || save.ci || save.incidentResolved) {
-        setTimeout(() => hud.toast('💾 progress restored — welcome back'), 1200);
+        setTimeout(() => hud.toast('progress restored, welcome back'), 1200);
       }
     }
   }
@@ -592,13 +592,13 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
             fishTimer = biteWindow();
             fishingIt.label = 'Reel in!';
             sfx.bite();
-            hud.toast('❗ BITE — reel it in!', biteWindow() * 1000);
+            hud.toast('BITE! reel it in!', biteWindow() * 1000);
           } else if (fishState === 'bite' && fishTimer <= 0) {
             fishState = 'idle';
             bobber.visible = false;
             fishingIt.label = 'Fish';
             sfx.miss();
-            hud.toast('💨 it got away… they always repro eventually');
+            hud.toast('it got away… they always repro eventually');
           }
         }
       }

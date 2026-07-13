@@ -141,13 +141,13 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
       const reduced = !motionReduced();
       setMotionReduced(reduced);
       hud.setMotion(reduced);
-      hud.toast(reduced ? '🍃 ambient animation minimized' : '✨ full animation on');
+      hud.toast(reduced ? 'ambient animation minimized' : 'full animation on');
     });
     if (motionReduced()) {
-      setTimeout(() => hud.toast('🍃 reduced-motion mode — tap 🍃 for full animation', 4200), 3000);
+      setTimeout(() => hud.toast('reduced-motion mode. tap the leaf chip for full animation', 4200), 3000);
     }
   }
-  setTimeout(() => hud.toast('🛤 follow the paths — they link every district', 3800), 2200);
+  setTimeout(() => hud.toast('follow the paths. they link every district', 3800), 2200);
   hud.onTextMode(() => {
     window.location.search = '?mode=text';
   });
