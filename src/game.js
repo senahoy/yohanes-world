@@ -10,6 +10,7 @@ import { createHud, createContactPanel } from './ui/hud.js';
 import { createMinimap } from './ui/minimap.js';
 import { createPiano } from './ui/piano.js';
 import { createQuests } from './quests.js';
+import { initForcedLandscape, viewSize } from './systems/viewport.js';
 import { initAudio, startMusic, setMuted, getMuted, duckMusic, audioState } from './systems/sfx.js';
 import { BUGS } from './content.js';
 import { C } from './world/materials.js';
@@ -34,7 +35,8 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   // ——— renderer + outline pass ———
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  const v0 = viewSize();
+  renderer.setSize(v0.w, v0.h);
   container.appendChild(renderer.domElement);
 
   const ink = new THREE.Color(C.ink);
@@ -45,7 +47,17 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   });
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 400);
+  const camera = new THREE.PerspectiveCamera(48, v0.w / v0.h, 0.1, 400);
+
+  // ——— resize (viewSize swaps dimensions while forced-landscape) ———
+  const applySize = () => {
+    const { w, h } = viewSize();
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  };
+  window.addEventListener('resize', applySize);
+
 
   // ——— lights: the day/night cycle drives color, intensity and direction
   // (sky.update moves the key light with whichever body is up) ———
@@ -91,13 +103,20 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   hud.show();
   if (input.isTouch) {
     hud.setTouchHints();
-    // the 3D world is landscape-only on touch devices: portrait gets a
-    // rotate gate (the boot screen and text version stay portrait-friendly)
-    const rotateOverlay = document.getElementById('rotate-overlay');
-    const portraitMq = window.matchMedia('(orientation: portrait)');
-    const syncRotateGate = () => { rotateOverlay.hidden = !portraitMq.matches; };
-    portraitMq.addEventListener('change', syncRotateGate);
-    syncRotateGate();
+    // touch portrait: the page CSS-rotates to landscape and the game plays
+    // immediately — a hint invites the player to turn the phone, then fades
+    const rotateHint = document.getElementById('rotate-overlay');
+    let hintTimer = null;
+    initForcedLandscape((rotated) => {
+      applySize();
+      clearTimeout(hintTimer);
+      if (rotated) {
+        rotateHint.hidden = false;
+        hintTimer = setTimeout(() => { rotateHint.hidden = true; }, 3500);
+      } else {
+        rotateHint.hidden = true;
+      }
+    });
   }
   input.setFirstMoveCallback(() => hud.fadeHint());
 
@@ -114,13 +133,6 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   setTimeout(() => hud.toast('🛤 follow the paths — they link every district', 3800), 2200);
   hud.onTextMode(() => {
     window.location.search = '?mode=text';
-  });
-
-  // ——— resize ———
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
   // ——— loop ———

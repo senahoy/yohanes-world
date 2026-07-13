@@ -1,4 +1,8 @@
+import { gameX, gameY, viewSize } from './viewport.js';
+
 // Keyboard (WASD/arrows + E + Space) and touch (virtual joystick + buttons).
+// Touch coordinates run through the viewport adapter so the joystick keeps
+// steering correctly while the page is CSS-rotated into forced landscape.
 export function createInput() {
   const keys = new Set();
   let interactQueued = false;
@@ -53,16 +57,18 @@ export function createInput() {
 
     window.addEventListener('touchstart', (e) => {
       for (const t of e.changedTouches) {
-        // left 60% of the screen steers; ignore touches on buttons/dialogs
-        if (joy.active || t.clientX > window.innerWidth * 0.6) continue;
+        const tx = gameX(t.clientX, t.clientY);
+        const ty = gameY(t.clientX, t.clientY);
+        // left 60% of the (game-space) screen steers; buttons/dialogs excluded
+        if (joy.active || tx > viewSize().w * 0.6) continue;
         if (t.target.closest('button, #dialog, #contact-panel, #boot, #fallback')) continue;
         joy.active = true;
         joy.id = t.identifier;
-        joy.baseX = t.clientX;
-        joy.baseY = t.clientY;
+        joy.baseX = tx;
+        joy.baseY = ty;
         joyEl.hidden = false;
-        joyEl.style.left = `${t.clientX - 64}px`;
-        joyEl.style.top = `${t.clientY - 64}px`;
+        joyEl.style.left = `${tx - 64}px`;
+        joyEl.style.top = `${ty - 64}px`;
         if (onFirstMove) { onFirstMove(); onFirstMove = null; }
       }
     }, { passive: true });
@@ -71,8 +77,8 @@ export function createInput() {
       if (!joy.active) return;
       for (const t of e.changedTouches) {
         if (t.identifier !== joy.id) continue;
-        const dx = t.clientX - joy.baseX;
-        const dy = t.clientY - joy.baseY;
+        const dx = gameX(t.clientX, t.clientY) - joy.baseX;
+        const dy = gameY(t.clientX, t.clientY) - joy.baseY;
         const len = Math.hypot(dx, dy) || 1;
         const clamped = Math.min(len, MAX);
         joy.x = (dx / len) * (clamped / MAX);

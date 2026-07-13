@@ -205,16 +205,44 @@ async function main() {
     await mp.goto(`${BASE}/?mode=world&reset`);
     await mp.waitForFunction(() => window.__world, null, { timeout: 30000 });
     await mp.waitForTimeout(1200);
-    const portraitGate = await mp.evaluate(() => !document.getElementById('rotate-overlay').hidden);
+    // portrait: page is CSS-rotated, canvas renders landscape, hint shows,
+    // and the joystick already steers in the rotated coordinate space
+    const portrait = await mp.evaluate(() => {
+      const c = document.querySelector('#app canvas');
+      return {
+        rotated: document.body.classList.contains('rotated'),
+        hint: !document.getElementById('rotate-overlay').hidden,
+        canvas: [c.width, c.height],
+      };
+    });
+    const portraitMove = await mp.evaluate(async () => {
+      const w = window.__world;
+      const mk = (id, target, x, y) => new Touch({ identifier: id, target, clientX: x, clientY: y });
+      const fire = (target, type, touches, changed) => target.dispatchEvent(new TouchEvent(type, {
+        touches, targetTouches: [], changedTouches: changed, bubbles: true, cancelable: true,
+      }));
+      const t1 = mk(1, document.body, 200, 400);
+      fire(window, 'touchstart', [t1], [t1]);
+      const t2 = mk(1, document.body, 260, 400); // physical +x = rotated forward
+      fire(window, 'touchmove', [t2], [t2]);
+      await new Promise((r) => setTimeout(r, 400));
+      const speed = +w.player.velocity.length().toFixed(1);
+      fire(window, 'touchend', [], [t2]);
+      return speed;
+    });
+    check('portrait: forced landscape, playable immediately',
+      portrait.rotated && portrait.hint && portrait.canvas[0] === 844 && portrait.canvas[1] === 390 && portraitMove > 1,
+      JSON.stringify({ ...portrait, portraitMove }));
     await mp.setViewportSize({ width: 844, height: 390 });
     await mp.waitForTimeout(500);
     const landscape = await mp.evaluate(() => ({
-      gateHidden: document.getElementById('rotate-overlay').hidden,
+      rotated: document.body.classList.contains('rotated'),
+      hintHidden: document.getElementById('rotate-overlay').hidden,
       act: document.getElementById('action-btn').textContent,
       jump: document.getElementById('jump-btn').textContent,
     }));
-    check('portrait shows rotate gate, landscape clears it',
-      portraitGate && landscape.gateHidden && landscape.act === 'ACT' && landscape.jump === 'JUMP',
+    check('landscape: rotation removed, labeled controls',
+      !landscape.rotated && landscape.hintHidden && landscape.act === 'ACT' && landscape.jump === 'JUMP',
       JSON.stringify(landscape));
     const multi = await mp.evaluate(async () => {
       const w = window.__world;
