@@ -293,37 +293,37 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     },
   });
 
-  interactables.push({
+  // filing is one FULL report per visit — ticket, evidence, root cause —
+  // because "repro steps ✓" is what a junior files, not a lead
+  const kanbanIt = {
     pos: spots.kanban,
     radius: 2.0,
-    label: 'File reports',
+    label: 'File report',
     enabled: () => true,
     onInteract() {
       if (caughtUnfiled.length === 0) {
         dialog.show(bugsFiled === BUGS.length ? CITY.kanbanAllDone : CITY.kanbanEmpty);
         return;
       }
-      const filed = caughtUnfiled.splice(0, caughtUnfiled.length);
-      const names = filed.map((b) => b.name).join(', ');
-      dialog.show([
-        { tone: 'ops', name: 'Kanban Board', text: `Filing ${filed.length} bug report${filed.length > 1 ? 's' : ''}: ${names}.\nRepro steps ✓ · severity ✓ · expected vs actual ✓` },
-        { tone: 'me', name: 'Yohanes', text: 'A bug that isn\'t reported well isn\'t fixed well. Clear repro steps are half the fix.' },
-      ], () => {
-        for (let i = 0; i < filed.length; i++) {
-          const idx = bugsFiled + i;
-          if (world.todoStickies[idx]) world.todoStickies[idx].visible = false;
-          if (world.doneStickies[idx]) world.doneStickies[idx].visible = true;
-        }
-        bugsFiled += filed.length;
-        filedIds.push(...filed.map((b) => b.id));
+      const bugDef = caughtUnfiled.shift();
+      dialog.show(bugDef.report, () => {
+        if (world.todoStickies[bugsFiled]) world.todoStickies[bugsFiled].visible = false;
+        if (world.doneStickies[bugsFiled]) world.doneStickies[bugsFiled].visible = true;
+        bugsFiled++;
+        filedIds.push(bugDef.id);
         persist();
-        hud.toast(`📌 ${filed.length} bug report${filed.length > 1 ? 's' : ''} filed · ${bugsFiled}/${BUGS.length}`);
+        sfx.pop();
+        const left = caughtUnfiled.length;
+        hud.toast(left > 0
+          ? `📌 ${bugDef.name} filed · ${bugsFiled}/${BUGS.length} — ${left} more report${left > 1 ? 's' : ''} to file`
+          : `📌 ${bugDef.name} filed · ${bugsFiled}/${BUGS.length}`);
         if (bugsFiled === BUGS.length) {
           confetti.burst(spots.kanban, 30, 2.5);
         }
       });
     },
-  });
+  };
+  interactables.push(kanbanIt);
 
   // ——— engineer + CI terminal: automate the regression suite ———
   interactables.push({
@@ -601,6 +601,11 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           }
         }
       }
+
+      // the kanban prompt shows the filing queue
+      kanbanIt.label = caughtUnfiled.length > 1
+        ? `File report (${caughtUnfiled.length} queued)`
+        : 'File report';
 
       // gourds regrow
       for (const g of world.gourds) {

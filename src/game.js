@@ -89,7 +89,16 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   const quests = createQuests({ scene, world, player, dialog, hud, contact, piano, assets, reducedMotion });
 
   hud.show();
-  if (input.isTouch) hud.setTouchHints();
+  if (input.isTouch) {
+    hud.setTouchHints();
+    // the 3D world is landscape-only on touch devices: portrait gets a
+    // rotate gate (the boot screen and text version stay portrait-friendly)
+    const rotateOverlay = document.getElementById('rotate-overlay');
+    const portraitMq = window.matchMedia('(orientation: portrait)');
+    const syncRotateGate = () => { rotateOverlay.hidden = !portraitMq.matches; };
+    portraitMq.addEventListener('change', syncRotateGate);
+    syncRotateGate();
+  }
   input.setFirstMoveCallback(() => hud.fadeHint());
 
   // audio: the ENTER click (or first key) unlocks the context, then the

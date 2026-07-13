@@ -93,6 +93,19 @@ export function createInput() {
     window.addEventListener('touchend', endTouch);
     window.addEventListener('touchcancel', endTouch);
 
+    // buttons react on touchstart, NOT click: browsers suppress synthetic
+    // clicks for secondary fingers during an active touch (the joystick),
+    // which forced players to stop walking before they could jump/interact.
+    // preventDefault stops the ghost click from double-firing.
+    actionEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (enabled) interactQueued = true;
+    }, { passive: false });
+    jumpEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (enabled) jumpQueued = true;
+    }, { passive: false });
+    // mouse fallback for touch-capable laptops
     actionEl.addEventListener('click', () => {
       if (enabled) interactQueued = true;
     });

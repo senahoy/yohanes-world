@@ -35,6 +35,6 @@ Playful, crafted, quality-obsessed. "Saturday-morning space cartoon built by an 
 
 - Full non-WebGL HTML fallback with identical content; "skip the game" affordance on load.
 - `prefers-reduced-motion` → fallback page by default (with opt-in to the 3D world).
-- Keyboard-only playable (WASD/arrows + E/Enter); touch joystick + action button on mobile.
+- Keyboard-only playable (WASD/arrows + E/Enter); touch joystick + labeled JUMP/ACT buttons on mobile (landscape-first, with a rotate gate in portrait).
 - Dialog text meets ≥4.5:1 contrast; HUD text readable over the sky at all times.
 - No flashing/strobe effects; glitch animations stay small-amplitude and local.

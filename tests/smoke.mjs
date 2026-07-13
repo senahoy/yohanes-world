@@ -193,6 +193,55 @@ async function main() {
   const bobberVisible = await page.evaluate(() => window.__world.world.bobber.visible);
   check('fishing cast shows the bobber', bobberVisible);
 
+  // ——— mobile: landscape gate, labeled controls, mid-run multi-touch jump ———
+  {
+    const mctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+    });
+    const mp = await mctx.newPage();
+    await mp.goto(`${BASE}/?mode=world&reset`);
+    await mp.waitForFunction(() => window.__world, null, { timeout: 30000 });
+    await mp.waitForTimeout(1200);
+    const portraitGate = await mp.evaluate(() => !document.getElementById('rotate-overlay').hidden);
+    await mp.setViewportSize({ width: 844, height: 390 });
+    await mp.waitForTimeout(500);
+    const landscape = await mp.evaluate(() => ({
+      gateHidden: document.getElementById('rotate-overlay').hidden,
+      act: document.getElementById('action-btn').textContent,
+      jump: document.getElementById('jump-btn').textContent,
+    }));
+    check('portrait shows rotate gate, landscape clears it',
+      portraitGate && landscape.gateHidden && landscape.act === 'ACT' && landscape.jump === 'JUMP',
+      JSON.stringify(landscape));
+    const multi = await mp.evaluate(async () => {
+      const w = window.__world;
+      const mkTouch = (id, target, x, y) => new Touch({ identifier: id, target, clientX: x, clientY: y });
+      const fire = (target, type, touches, changed) => target.dispatchEvent(new TouchEvent(type, {
+        touches, targetTouches: touches.filter((t) => t.target === target), changedTouches: changed,
+        bubbles: true, cancelable: true,
+      }));
+      const t1 = mkTouch(1, document.body, 150, 250);
+      fire(window, 'touchstart', [t1], [t1]);
+      const t1move = mkTouch(1, document.body, 150, 190);
+      fire(window, 'touchmove', [t1move], [t1move]);
+      await new Promise((r) => setTimeout(r, 500));
+      const jumpBtn = document.getElementById('jump-btn');
+      const rect = jumpBtn.getBoundingClientRect();
+      const t2 = mkTouch(2, jumpBtn, rect.x + 20, rect.y + 20);
+      fire(jumpBtn, 'touchstart', [t1move, t2], [t2]);
+      await new Promise((r) => setTimeout(r, 200));
+      const result = { airborne: w.player.isAirborne(), moving: w.player.velocity.length() > 1 };
+      fire(jumpBtn, 'touchend', [t1move], [t2]);
+      fire(window, 'touchend', [], [t1move]);
+      return result;
+    });
+    check('multi-touch: jump fires mid-run without stopping', multi.airborne && multi.moving, JSON.stringify(multi));
+    await mctx.close();
+  }
+
   // ——— persistence across reload ———
   await page.goto(`${BASE}/?mode=world`);
   await world();

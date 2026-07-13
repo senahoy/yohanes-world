@@ -38,7 +38,7 @@ export function createHud() {
     show() { hud.hidden = false; },
     hide() { hud.hidden = true; },
     setTouchHints() {
-      hintEl.innerHTML = 'drag to move &nbsp;·&nbsp; <span class="key">⤴</span> jump &nbsp;·&nbsp; <span class="key">E</span> interact';
+      hintEl.innerHTML = 'drag left side to move &nbsp;·&nbsp; <span class="key">JUMP</span> &nbsp;·&nbsp; <span class="key">ACT</span> to interact';
     },
     onTextMode(fn) { textBtn.addEventListener('click', fn); },
     onMute(fn) { muteBtn.addEventListener('click', fn); },

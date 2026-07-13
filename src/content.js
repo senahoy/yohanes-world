@@ -21,6 +21,11 @@ export const BUGS = [
     ],
     fallbackTitle: 'About',
     fallbackBody: "Hello stranger — I'm Yohanes, QA Lead and senior automation engineer with 8+ years across fintech, banking, e-commerce and platform teams, building test strategy, automation frameworks and AI-native QA. My job, in one line: I transform doubt into confidence. Where chaos meets clarity — and users smile.",
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-101 · NullPointerBug · P1-Critical\nProfile screen crashes for newly registered users.\nEnv: prod 4.12.0 · Android 14 / iOS 18 · repro 5/5' },
+      { tone: 'ops', name: 'Evidence', text: '> FATAL TypeError: cannot read "avatarUrl" of null\n>   at ProfileHeader.render (profile.tsx:41)\n> GET /v1/users/me → 200 · body: { profile: null }' },
+      { tone: 'me', name: 'Yohanes', text: "Root cause: the API contract allows profile:null for accounts that skipped onboarding — the client never guards it. Fix: null-guard plus a skeleton state, and a contract test so the schema can't drift again." },
+    ],
   },
   {
     id: 'offbyone',
@@ -28,11 +33,16 @@ export const BUGS = [
     chapter: 'Journey',
     lines: [
       { tone: 'bug', name: 'OffByOneBug', text: 'i was SO close to the boundary… one step too far. classic me.' },
-      { tone: 'me', name: 'Yohanes', text: "This little guy has been following me since 2017 — Gojek test engineer first, then P2P-lending fintech, then Nanovest: senior QA, security operations, and now QA Lead driving modernization across 5 squads." },
+      { tone: 'me', name: 'Yohanes', text: "This little guy has been following me since 2017 — Bukalapak test engineer first, then Gojek, then P2P-lending fintech, then Nanovest: senior QA, security operations, and now QA Lead driving modernization across 5 squads." },
       { tone: 'me', name: 'Yohanes', text: 'My philosophy hasn\'t changed since day one: quality is not by chance. It is engineered.' },
     ],
     fallbackTitle: 'Journey',
-    fallbackBody: 'On the road since 2017 — Gojek test engineer, P2P-lending fintech, then Nanovest: senior QA, quality & security operations, and now QA Lead driving modernization across 5 squads (2,999 legacy cases migrated to Git-native specs). My philosophy has not changed since day one: quality is not by chance. It is engineered.',
+    fallbackBody: 'On the road since 2017 — Bukalapak test engineer (2017–2020), then Gojek, then P2P-lending fintech, then Nanovest: senior QA, quality & security operations, and now QA Lead driving modernization across 5 squads (2,999 legacy cases migrated to Git-native specs). My philosophy has not changed since day one: quality is not by chance. It is engineered.',
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-102 · OffByOneBug · P2-Major\nTransaction history drops the last item of every page.\nEnv: web portal 2.9.1 · repro 5/5 · all paginated lists affected' },
+      { tone: 'ops', name: 'Evidence', text: '> SELECT … LIMIT 20 OFFSET 20 → returns rows 21–40 ✓\n> UI renders indexes 0..18 — loop guard reads: i < items.length - 1' },
+      { tone: 'me', name: 'Yohanes', text: 'Root cause: a < that should be <= — the classic. The fix is one character; the deliverable is the boundary-value matrix I attached: first, last, empty, exactly-one-page. Every list component inherits it now.' },
+    ],
   },
   {
     id: 'racecondition',
@@ -46,6 +56,11 @@ export const BUGS = [
     fallbackTitle: 'Skills',
     fallbackBody: "Automation with Playwright Test, WebdriverIO, Appium, Selenium and Robot Framework — in TypeScript, Python, Java and Kotlin — across API, web, mobile, performance and security testing. Plus AI-native QA: Claude-based agents, RAG, MCP-style tooling and AI test-case generation, always behind a human review gate.",
     tags: ['Playwright', 'WebdriverIO', 'Appium', 'TypeScript', 'Python', 'Claude SDK', 'RAG', 'CI/CD', 'Datadog', 'GCP'],
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-103 · RaceConditionBug · P1-Critical\nDouble-tap on PAY creates duplicate transactions.\nEnv: mobile 4.12.0 · repro 3/10 — timing-dependent' },
+      { tone: 'ops', name: 'Evidence', text: '> 14:02:11.204 POST /v1/payments → 201 (txn_881)\n> 14:02:11.246 POST /v1/payments → 201 (txn_882)\n> same cart, same user, 42ms apart — no idempotency key' },
+      { tone: 'me', name: 'Yohanes', text: 'Root cause: no idempotency on the payment endpoint AND no client debounce — fix both layers, never one. Then prove it stays fixed with a k6 burst test wired into CI.' },
+    ],
   },
   {
     id: 'heisenbug',
@@ -58,6 +73,11 @@ export const BUGS = [
     ],
     fallbackTitle: 'Achievement',
     fallbackBody: 'Winner — Techconnect Testathon 2023 · Best Participant — Techconnect Hackathon & Testathon 2023 · Runner-up — Bukalapak Hackathon & Testathon 2019 · Certified in Cybersecurity (CC), ISC2 2025.',
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-104 · HeisenBug · P2-Major\nDashboard chart renders empty — production builds only.\nRepro: 0/10 with devtools open · 7/10 without' },
+      { tone: 'ops', name: 'Evidence', text: '> chart.init fires before dataset resolves (prod 12ms, dev 210ms)\n> unawaited promise in useChartData() — render wins the race\n> opening devtools slows the tab enough to "fix" it' },
+      { tone: 'me', name: 'Yohanes', text: 'Root cause: an unawaited fetch that only loses the race on fast machines — observing it changed it, hence the name. Fix: await the data with a loading state, plus a deterministic-wait test that fails without the fix.' },
+    ],
   },
   {
     id: 'regression',
@@ -70,6 +90,11 @@ export const BUGS = [
     ],
     fallbackTitle: 'Projects',
     fallbackBody: 'OptimusQA / Agentic QA Console (2026) — a QA operations cockpit where every activity is a reviewable run: live event logs, approval inbox, coverage map, persistent knowledge base. Cases climb a maturity ladder from manual to agentic to fully automated (replayed without model tokens), on a TypeScript monorepo with Playwright Test, WebdriverIO mobile E2E, OpenAPI-generated clients and Git-native specs. Also SupaQA (2025) — an LLM+RAG Slack assistant drafting test cases from Jira with human review, exporting to Xray, TestRail and Qase.',
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-105 · RegressionBug · P2-Major\nCurrency rounding bug returns — originally fixed 8 months ago.\nEnv: API v4.2 · repro 5/5' },
+      { tone: 'ops', name: 'Evidence', text: '> git bisect → commit 9f2c1aa "refactor money utils"\n> the old fix survived the refactor — its regression test did not\n> test deleted in the same PR, review missed it' },
+      { tone: 'me', name: 'Yohanes', text: 'Root cause: the fix had a test, the refactor dropped it, nobody noticed. My playbook change: regression suites are append-only, and deleting a test requires the same sign-off as deleting the code it guards.' },
+    ],
   },
   {
     id: 'flakytest',
@@ -82,6 +107,11 @@ export const BUGS = [
     ],
     fallbackTitle: 'Status',
     fallbackBody: 'Open to work — remote, hybrid, or on-site; willing to relocate for the right team. Always ready to learn and explore new technology. Want to talk quality, automation, or AI-assisted testing? Send a signal below.',
+    report: [
+      { tone: 'ops', name: 'Bug Report', text: 'BUG-106 · FlakyTestBug · P3-Minor\ncheckout.spec.ts fails ~1 in 12 CI runs, always passes locally.\nEvidence base: 2,000+ run history analyzed' },
+      { tone: 'ops', name: 'Evidence', text: '> failures cluster on runner-03 — the slowest pool\n> await click() races a 300ms slide-in animation\n> failure screenshot: button caught mid-transition' },
+      { tone: 'me', name: 'Yohanes', text: 'Root cause: waiting on time instead of state around an animated element. Fix: wait for element-stable + network-idle. Then policy: quarantined flaky tests get 7 days to be fixed or deleted — a flaky suite teaches people to ignore red.' },
+    ],
   },
 ];
 
@@ -111,8 +141,9 @@ export const INCIDENT = {
   ],
   // Logs terminal, during investigation
   investigate: [
+    { tone: 'ops', name: 'Logs Terminal', text: '> 14:02 error_rate checkout-service: 0.02% → 87%\n> first bad trace: NPE at PriceCalculator.applyDiscount\n> deploy #4123 landed 14:01 — 60 seconds before the spike' },
     { tone: 'ops', name: 'Logs Terminal', text: '> deploy #4123 · checkout-service\n> tests: SKIPPED (flag --skip-regression)\n> author note: "small change, no need for tests :)"' },
-    { tone: 'me', name: 'Yohanes', text: '"Small change, no need for tests." The five most expensive words in software. There\'s our root cause.' },
+    { tone: 'me', name: 'Yohanes', text: 'Timeline correlation, a first bad stack frame, and a skipped gate — that\'s a confident rollback call, not a guess. And "small change, no need for tests"? The five most expensive words in software.' },
     { tone: 'me', name: 'Yohanes', text: 'Back to the PROD rack — we roll back #4123, then we make the regression suite non-skippable. Quality is engineered, remember?' },
   ],
   // Terminal before briefing
@@ -136,7 +167,7 @@ export const INCIDENT = {
     { tone: 'me', name: 'Yohanes', text: 'Rolling back deploy #4123… restoring the last green build… and pinning the regression suite as a required gate.' },
     { tone: 'ops', name: 'PROD Server', text: 'rollback complete. error rate: 0.02%. latency: nominal. users: smiling again.' },
     { tone: 'ops', name: 'Ops Bot', text: 'beep. incident resolved in record time. postmortem scheduled — blameless, obviously. you have earned a badge.' },
-    { tone: 'me', name: 'Yohanes', text: "And THAT is the security-operations side of my work: WAF and monitoring dashboards, root-cause analysis, safe rollbacks — and making sure the same bug never ships twice." },
+    { tone: 'me', name: 'Yohanes', text: 'And THAT is the security-operations side of my work. The blameless postmortem ships three action items: the regression gate becomes non-skippable, checkout gets canary deploys, and the error-rate alert moves from 5% to 1%. Same bug never ships twice.' },
   ],
   rackResolved: [
     { tone: 'ops', name: 'PROD Server', text: 'all green. deploy #4124 (with tests!) purring in production. the sticky note has been updated: "DO NOT skip the regression suite."' },
@@ -148,14 +179,14 @@ export const INCIDENT = {
 export const CITY = {
   pmIntro: [
     { tone: 'ops', name: 'The PM', text: "You must be the QA engineer! Perfect timing — the release candidate shipped and SIX bugs escaped the test suite. The sprint board is a mess." },
-    { tone: 'me', name: 'Yohanes', text: "On it. I'll hunt them down across the island — and file a proper report for each one on your kanban." },
+    { tone: 'me', name: 'Yohanes', text: "On it. I'll hunt them down across the island — and file a proper report for each: evidence, root cause, and the prevention step. Not just \"it's broken\"." },
     { tone: 'ops', name: 'The PM', text: 'Music to my ears. Remember the rule: if it is not on the board, it did not happen.' },
   ],
   pmWaiting: [
-    { tone: 'ops', name: 'The PM', text: 'How is the hunt going? Squash them, then FILE them — repro steps, severity, expected vs actual. The kanban is right behind me.' },
+    { tone: 'ops', name: 'The PM', text: 'How is the hunt going? Squash them, then FILE them — and I want your usual standard: evidence attached, root cause called, prevention proposed. The kanban is right behind me.' },
   ],
   pmAllFiled: [
-    { tone: 'ops', name: 'The PM', text: 'Six reports, all with clean repro steps and severity. The sprint review is going to be painless for once. You are welcome at my planning table any day.' },
+    { tone: 'ops', name: 'The PM', text: 'Six reports — each with log evidence, a root-cause call, and a prevention item. Engineering triaged the lot in one standup, zero back-and-forth. You are welcome at my planning table any day.' },
     { tone: 'me', name: 'Yohanes', text: "That's the real job: QA isn't a gate at the end — it starts at sprint planning, in the acceptance criteria, before the first line of code." },
   ],
   kanbanEmpty: [
@@ -177,7 +208,7 @@ export const CITY = {
   ],
   ciRun: [
     { tone: 'ops', name: 'CI Terminal', text: '> scaffolding e2e specs (Playwright)…\n> wiring pipeline stage "regression"…\n> parallelizing 84 tests across 4 workers…' },
-    { tone: 'ops', name: 'CI Terminal', text: '> run #1 · 84 passed · 0 failed · 6m 12s\n> status: GREEN ✅ · trigger: every commit' },
+    { tone: 'ops', name: 'CI Terminal', text: '> run #1 · 84 passed · 0 failed · 6m 12s across 4 shards\n> flaky quarantine: 0 · gate: blocks merge on red\n> report → Slack + trend dashboard · trigger: every commit' },
     { tone: 'me', name: 'Yohanes', text: 'Automated. No human sacrifice required — the suite guards every merge from now on.' },
   ],
   ciAfter: [
@@ -228,6 +259,11 @@ export const DISH_DIALOG = [
 export const FALLBACK_INCIDENT = {
   title: 'War story: the production incident',
   body: 'Hidden in the server graveyard at the island\'s dark north edge is a production incident: a deploy that skipped the regression suite takes checkout down. You triage it with Ops Bot — read the dashboard spike, find the root cause in the deploy log, roll back, and pin the test gate so it can never be skipped again. That is the security-operations side of my work: WAF and monitoring dashboards, root-cause analysis, safe rollbacks, blameless postmortems.',
+};
+
+export const FALLBACK_REPORT = {
+  title: 'How I file a bug',
+  body: 'Every bug caught in the world is filed on the kanban as a real report — here is one. BUG-103 · RaceConditionBug · P1-Critical: double-tap on PAY creates duplicate transactions (repro 3/10, timing-dependent). Evidence: two POST /v1/payments 42ms apart, both 201, same cart, no idempotency key. Root cause: no server-side idempotency AND no client debounce — fix both layers, never one, then prove it stays fixed with a k6 burst test in CI. Severity and repro steps are table stakes; evidence, root cause and prevention are what make a report actionable.',
 };
 
 export const FALLBACK_CITY = {

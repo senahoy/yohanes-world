@@ -1,4 +1,4 @@
-import { PROFILE, BUGS, FALLBACK_INCIDENT, FALLBACK_CITY } from '../content.js';
+import { PROFILE, BUGS, FALLBACK_INCIDENT, FALLBACK_CITY, FALLBACK_REPORT } from '../content.js';
 import { contactActionsHtml } from './hud.js';
 
 // The text version: every chapter the bugs deliver, as comic-paper panels.
@@ -28,6 +28,11 @@ export function showFallback({ canRun3d = false, onEnterWorld = null } = {}) {
         <span class="fb-tag">🏙 city district</span>
         <h2>${FALLBACK_CITY.title}</h2>
         <p>${FALLBACK_CITY.body}</p>
+      </section>
+      <section class="fb-panel">
+        <span class="fb-tag">📋 kanban board</span>
+        <h2>${FALLBACK_REPORT.title}</h2>
+        <p>${FALLBACK_REPORT.body}</p>
       </section>
       <section class="fb-panel">
         <span class="fb-tag">🛡 easter egg</span>

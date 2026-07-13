@@ -20,7 +20,7 @@ function webglAvailable() {
 }
 const canRun3d = webglAvailable();
 
-if (isTouch) controlsHint.textContent = 'drag to move · tap E to interact · ⤴ to jump';
+if (isTouch) controlsHint.textContent = 'drag to move · ACT to interact · JUMP to jump';
 
 function dismissBoot() {
   boot.classList.add('leaving');
@@ -31,6 +31,14 @@ let gameStarted = false;
 async function enterWorld() {
   if (gameStarted) return;
   gameStarted = true;
+  // touch devices: go fullscreen + lock landscape while we still hold the
+  // tap's user activation (Android honors this; iOS falls back to the
+  // in-game rotate gate)
+  if (isTouch && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen()
+      .then(() => screen.orientation?.lock?.('landscape'))
+      .catch(() => { /* unsupported — the rotate overlay covers it */ });
+  }
   enterBtn.disabled = true;
   enterBtn.textContent = '… BOOTING WORLD';
   const { startGame } = await import('./game.js');
