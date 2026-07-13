@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { C, toon, noOutline, makeTextTexture } from './materials.js';
 import { createCreatures } from './creatures.js';
+import { motionReduced } from '../systems/motion.js';
 
 // A limited, hand-crafted floating island — Harvest Moon valley layout with
 // chunky Roblox-style terraces and stepped cliffs. Six districts:
@@ -216,7 +217,7 @@ function faceted(geometry) {
   return g;
 }
 
-export function createIsland(assets = null, reducedMotion = false) {
+export function createIsland(assets = null) {
   const group = new THREE.Group();
   // { pos, r } blocks at any height; `water` marks pond barriers (the dock
   // overrides them); `h` marks low obstacles the player can jump over
@@ -1139,7 +1140,6 @@ export function createIsland(assets = null, reducedMotion = false) {
     pond: { x: pondC.x, z: pondC.z, r: WATER_R, y: WATER_Y },
     dark: { x: darkC.x, z: darkC.z, r: 10 },
     flowerPts,
-    reducedMotion,
   });
 
   // ——— named spots for quests/NPCs (all on the ground) ———
@@ -1188,8 +1188,9 @@ export function createIsland(assets = null, reducedMotion = false) {
     loopPointAt,
     loopLength: LOOP_LENGTH,
     update(t, dt = 0.016, playerPos = null) {
-      // ambient motion stays parked for reduced-motion visitors
-      if (!reducedMotion) {
+      // ambient motion parks under reduced motion (live — the 🍃 chip
+      // flips it back without a reload)
+      if (!motionReduced()) {
         for (let i = 0; i < crystals.length; i++) {
           crystals[i].material.emissiveIntensity = 0.2 + Math.sin(t * 1.4 + i) * 0.12;
         }
@@ -1205,6 +1206,8 @@ export function createIsland(assets = null, reducedMotion = false) {
           ripples[i].scale.setScalar(1.2 + k * 5);
           ripples[i].material.opacity = 0.28 * (1 - k);
         }
+      } else {
+        for (const r of ripples) r.material.opacity = 0; // still water
       }
       creatures.update(t, dt, playerPos);
     },

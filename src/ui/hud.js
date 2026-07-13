@@ -12,6 +12,7 @@ export function createHud() {
   const actionBtn = document.getElementById('action-btn');
   const textBtn = document.getElementById('hud-text-mode');
   const muteBtn = document.getElementById('hud-mute');
+  const motionBtn = document.getElementById('hud-motion');
   const fsBtn = document.getElementById('hud-fullscreen');
 
   // fullscreen: ⛶ chip + F key (hidden where the API doesn't exist, e.g. iPhone)
@@ -43,6 +44,13 @@ export function createHud() {
     onTextMode(fn) { textBtn.addEventListener('click', fn); },
     onMute(fn) { muteBtn.addEventListener('click', fn); },
     setMuted(m) { muteBtn.textContent = m ? '🔇' : '🔊'; },
+    showMotionChip() { motionBtn.hidden = false; },
+    onMotion(fn) { motionBtn.addEventListener('click', fn); },
+    setMotion(reduced) {
+      motionBtn.textContent = reduced ? '🍃' : '✨';
+      motionBtn.title = reduced ? 'Enable full animation' : 'Reduce animation';
+      motionBtn.setAttribute('aria-pressed', reduced ? 'true' : 'false');
+    },
     setBugs(n, total) { bugsEl.textContent = `🐛 ${n}/${total}`; },
     setBadge(visible) { badgeEl.hidden = !visible; },
     setAlert(visible) { alertEl.hidden = !visible; },

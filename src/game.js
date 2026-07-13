@@ -11,6 +11,7 @@ import { createMinimap } from './ui/minimap.js';
 import { createPiano } from './ui/piano.js';
 import { createQuests } from './quests.js';
 import { initForcedLandscape, viewSize } from './systems/viewport.js';
+import { motionReduced, setMotionReduced, osPrefersReduced, motionOverridden } from './systems/motion.js';
 import { initAudio, startMusic, setMuted, getMuted, duckMusic, audioState } from './systems/sfx.js';
 import { BUGS } from './content.js';
 import { C } from './world/materials.js';
@@ -73,7 +74,7 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   const sky = createSky();
   sky.bindLights({ hemi, key, ambient });
   scene.add(sky.group);
-  const world = createIsland(assets, reducedMotion);
+  const world = createIsland(assets);
   scene.add(world.group);
 
   const input = createInput();
@@ -93,12 +94,12 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   window.addEventListener('pointerup', () => { dragX = null; });
 
   const hud = createHud();
-  const dialog = createDialog({ reducedMotion });
+  const dialog = createDialog();
   const contact = createContactPanel();
   const piano = createPiano();
   const minimap = createMinimap();
   hud.setBugs(0, BUGS.length); // baseline BEFORE quests — restore may raise it
-  const quests = createQuests({ scene, world, player, dialog, hud, contact, piano, assets, reducedMotion });
+  const quests = createQuests({ scene, world, player, dialog, hud, contact, piano, assets });
 
   hud.show();
   if (input.isTouch) {
@@ -130,6 +131,22 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
     setMuted(m);
     hud.setMuted(m);
   });
+
+  // motion: the OS reduce-motion signal (or Android battery saver) parks
+  // the ambience by default — the 🍃 chip makes that visible and reversible
+  if (osPrefersReduced || motionOverridden()) {
+    hud.showMotionChip();
+    hud.setMotion(motionReduced());
+    hud.onMotion(() => {
+      const reduced = !motionReduced();
+      setMotionReduced(reduced);
+      hud.setMotion(reduced);
+      hud.toast(reduced ? '🍃 ambient animation minimized' : '✨ full animation on');
+    });
+    if (motionReduced()) {
+      setTimeout(() => hud.toast('🍃 reduced-motion mode — tap 🍃 for full animation', 4200), 3000);
+    }
+  }
   setTimeout(() => hud.toast('🛤 follow the paths — they link every district', 3800), 2200);
   hud.onTextMode(() => {
     window.location.search = '?mode=text';
@@ -176,5 +193,5 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
   requestAnimationFrame(frame);
 
   // dev/testing handle (harmless in prod; enables scripted playthroughs)
-  window.__world = { player, camera, followCam, quests, dialog, world, sky, audioState };
+  window.__world = { player, camera, followCam, quests, dialog, world, sky, audioState, motion: { reduced: motionReduced, set: setMotionReduced } };
 }

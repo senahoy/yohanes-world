@@ -46,7 +46,7 @@ Strategy: **Committed.** The indigo cosmos carries 60% of every frame; amber is 
 ## Components
 
 - **Dialog panel:** paper box, 3px ink border, hard offset shadow (no blur), slightly rotated name chip in brand violet with paper text. Typewriter text reveal (instant under reduced motion). Pixel continue button with `▶`.
-- **HUD:** top-left world title chip; top-right bug counter `🐛 n/6`, ⛶ fullscreen chip (F key; hidden where the API is unsupported), 🔊 mute chip and TXT switch on translucent indigo; bottom-center key hints that fade after first movement.
+- **HUD:** top-left world title chip; top-right bug counter `🐛 n/6`, ⛶ fullscreen chip (F key; hidden where the API is unsupported), 🍃/✨ motion chip (only when reduce-motion is active or overridden), 🔊 mute chip and TXT switch on translucent indigo; bottom-center key hints that fade after first movement.
 - **Quest markers:** amber `!` sprite bobbing above undiscovered bugs; amber ring pulse on the ground when in interaction range.
 - **Touch controls (coarse pointers):** always landscape — in portrait the page CSS-rotates 90° and plays immediately (renderer dimensions swap, joystick coordinates remap), with a transient 3.5s rotate hint; Android additionally gets fullscreen + orientation lock on entry. Left virtual joystick; right thumb gets pixel-labeled `JUMP` and `ACT` buttons (≥64px, no emoji glyphs) that respond on touchstart so a second finger works mid-run.
 - **Fallback page:** single-column comic-panel layout — each portfolio chapter is one paper panel on indigo, same copy the bugs deliver.
@@ -81,7 +81,7 @@ Strategy: **Committed.** The indigo cosmos carries 60% of every frame; amber is 
 
 - Ease-out-quart/quint everywhere in UI; no bounce, no elastic.
 - World idle motion is continuous but calm: ring rotation, cloud drift, bug jitter, marker bob.
-- `prefers-reduced-motion`: boot to fallback page (opt-in link to enter the world); inside the world, the typewriter is instant, ambient loops park (no butterflies/birds, still water, stopped windmill, steady fireflies) and the fishing bite window nearly doubles.
+- `prefers-reduced-motion`: boot to fallback page (opt-in link to enter the world); inside the world, the typewriter is instant, ambient loops park (butterflies/birds hidden, still water, stopped windmill, steady fireflies) and the fishing bite window nearly doubles. Because Android battery saver also raises this signal, a 🍃 HUD chip appears whenever it's active: an entry toast names the mode, and the chip toggles full animation live — the explicit choice persists and outranks the OS default.
 - Dialog open: 180ms scale+fade from 0.96; close: 120ms fade.
 
 ## Layout (UI overlays & fallback)

@@ -3,6 +3,7 @@ import { BUGS, ALL_BUGS_DONE, INCIDENT, DISH_DIALOG, MAILBOX_DIALOG, CITY, FISH,
 import { createBug, createConfetti } from './world/bugs.js';
 import { createCharacter } from './world/character.js';
 import { heightAt } from './world/island.js';
+import { motionReduced } from './systems/motion.js';
 import { C, makeMarker, makeSpeechBubble } from './world/materials.js';
 import { sfx } from './systems/sfx.js';
 
@@ -23,7 +24,7 @@ function loadSave() {
   }
 }
 
-export function createQuests({ scene, world, player, dialog, hud, contact, piano, assets = null, reducedMotion = false }) {
+export function createQuests({ scene, world, player, dialog, hud, contact, piano, assets = null }) {
   const confetti = createConfetti(scene);
   const interactables = [];
   const spots = world.spots;
@@ -427,7 +428,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
   // ——— fishing off the dock ———
   const bobber = world.bobber;
   const bobberBaseY = bobber.position.y;
-  const BITE_WINDOW = reducedMotion ? 2.2 : 1.2;
+  const biteWindow = () => (motionReduced() ? 2.2 : 1.2); // live, gentler timing
   let fishState = 'idle'; // idle | waiting | bite
   let fishTimer = 0;
   let fishCount = 0;
@@ -588,10 +589,10 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
             : bobberBaseY + Math.sin(t * 2.1) * 0.03;
           if (fishState === 'waiting' && fishTimer <= 0) {
             fishState = 'bite';
-            fishTimer = BITE_WINDOW;
+            fishTimer = biteWindow();
             fishingIt.label = 'Reel in!';
             sfx.bite();
-            hud.toast('❗ BITE — reel it in!', BITE_WINDOW * 1000);
+            hud.toast('❗ BITE — reel it in!', biteWindow() * 1000);
           } else if (fishState === 'bite' && fishTimer <= 0) {
             fishState = 'idle';
             bobber.visible = false;

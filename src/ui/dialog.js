@@ -1,7 +1,9 @@
+import { motionReduced } from '../systems/motion.js';
+
 // Paper dialog panel with typewriter reveal. Lines are [{ tone, name, text }].
 const TYPE_MS = 16;
 
-export function createDialog({ reducedMotion = false } = {}) {
+export function createDialog() {
   const panel = document.getElementById('dialog');
   const nameEl = document.getElementById('dialog-name');
   const textEl = document.getElementById('dialog-text');
@@ -20,8 +22,8 @@ export function createDialog({ reducedMotion = false } = {}) {
     nextBtn.textContent = index === lines.length - 1 ? '✕' : '▶';
     clearInterval(typing);
     typing = null;
-    if (reducedMotion) {
-      textEl.textContent = line.text;
+    if (motionReduced()) {
+      textEl.textContent = line.text; // instant reveal
       return;
     }
     textEl.textContent = '';

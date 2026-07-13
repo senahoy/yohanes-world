@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { C, toon, noOutline, makeGlowTexture, makeBlobShadow } from './materials.js';
+import { motionReduced } from '../systems/motion.js';
 
 // The island's small residents: chickens in the farmyard, a dog by the barn,
 // butterflies over the meadow flowers, birds circling overhead, fish in the
 // pond, fireflies in the server graveyard. All procedural, all cheap — they
 // exist so the world never holds still.
 
-export function createCreatures({ group, heightAt, colliders = [], yard, dogHome, pond, dark, flowerPts = [], reducedMotion = false }) {
+export function createCreatures({ group, heightAt, colliders = [], yard, dogHome, pond, dark, flowerPts = [] }) {
   const inkMat = toon(C.ink);
 
   // ground the creatures respect: no wandering into props or the pond
@@ -145,9 +146,10 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
   })();
 
   // ——— butterflies over the flowers ———
-  // (reduced motion: no ambient fliers — the sky and meadow hold still)
+  // (always built; under reduced motion they hide per-frame so the 🍃 chip
+  // can bring them back without a reload)
   const butterflies = [];
-  if (!reducedMotion) {
+  {
     const wingGeo = new THREE.CircleGeometry(0.09, 6);
     const colors = [C.bugGlitch, C.accent, C.brandBright, C.paper];
     const anchors = flowerPts.length ? flowerPts : [new THREE.Vector3(0, 0, 20)];
@@ -175,7 +177,7 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
 
   // ——— birds circling overhead ———
   const birds = [];
-  if (!reducedMotion) {
+  {
     const bodyMat = toon('#5a6c96');
     const wingMat = toon('#48587e');
     for (let f = 0; f < 2; f++) {
@@ -254,6 +256,8 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
   const tmp = new THREE.Vector3();
 
   function update(t, dt, playerPos = null) {
+    const reduced = motionReduced();
+
     // chickens: waddle toward the target, peck, pick a new spot
     for (const c of chickens) {
       if (c.peck > 0) {
@@ -337,6 +341,8 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
 
     // butterflies: flutter in loose orbits, hop between flowers
     for (const b of butterflies) {
+      b.holder.visible = !reduced;
+      if (reduced) continue;
       const flap = Math.sin(t * 14 + b.phase) * 0.9;
       b.wingL.rotation.y = flap;
       b.wingR.rotation.y = -flap;
@@ -357,6 +363,8 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
 
     // birds: bank around their circuits
     for (const b of birds) {
+      b.bird.visible = !reduced;
+      if (reduced) continue;
       b.angle += b.speed * dt;
       const x = b.center.x + Math.cos(b.angle) * b.center.r;
       const z = b.center.z + Math.sin(b.angle) * b.center.r;
@@ -370,7 +378,14 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
 
     // fish: shadows circle; sometimes one leaps (never under reduced motion)
     for (const f of fishes) {
-      if (reducedMotion) break;
+      if (reduced) {
+        f.jumper.visible = false;
+        if (f.jumpT >= 0) {
+          f.jumpT = -1;
+          f.jumpAt = 6 + Math.random() * 14;
+        }
+        continue; // shadows freeze in place
+      }
       f.angle += f.speed * dt;
       const fx = pond.x + Math.cos(f.angle) * f.r;
       const fz = pond.z + Math.sin(f.angle) * f.r;
@@ -401,7 +416,7 @@ export function createCreatures({ group, heightAt, colliders = [], yard, dogHome
 
     // fireflies: drift and pulse (steady glow under reduced motion)
     for (const ff of fireflies) {
-      if (reducedMotion) {
+      if (reduced) {
         ff.sp.material.opacity = 0.55;
         continue;
       }

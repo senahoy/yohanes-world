@@ -270,6 +270,36 @@ async function main() {
     await mctx.close();
   }
 
+  // ——— reduced-motion: ambience parks, 🍃 chip overrides and persists ———
+  {
+    const rctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const rp = await rctx.newPage();
+    await rp.goto(`${BASE}/?mode=world&reset`);
+    await rp.waitForFunction(() => window.__world, null, { timeout: 30000 });
+    await rp.waitForTimeout(1200);
+    const before = await rp.evaluate(() => ({
+      reduced: window.__world.motion.reduced(),
+      chipVisible: !document.getElementById('hud-motion').hidden,
+      chip: document.getElementById('hud-motion').textContent,
+    }));
+    await rp.click('#hud-motion');
+    await rp.waitForTimeout(300);
+    const after = await rp.evaluate(() => ({
+      reduced: window.__world.motion.reduced(),
+      chip: document.getElementById('hud-motion').textContent,
+      stored: localStorage.getItem('yohanes-world-motion'),
+    }));
+    await rp.reload();
+    await rp.waitForFunction(() => window.__world, null, { timeout: 30000 });
+    await rp.waitForTimeout(800);
+    const persisted = await rp.evaluate(() => window.__world.motion.reduced());
+    check('reduce-motion parks ambience; 🍃 chip overrides and persists',
+      before.reduced && before.chipVisible && before.chip === '🍃'
+        && !after.reduced && after.chip === '✨' && after.stored === 'full' && persisted === false,
+      JSON.stringify({ before, after, persisted }));
+    await rctx.close();
+  }
+
   // ——— persistence across reload ———
   await page.goto(`${BASE}/?mode=world`);
   await world();
