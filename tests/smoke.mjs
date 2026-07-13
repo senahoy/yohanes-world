@@ -267,6 +267,25 @@ async function main() {
       return result;
     });
     check('multi-touch: jump fires mid-run without stopping', multi.airborne && multi.moving, JSON.stringify(multi));
+    // right half of the screen orbits the camera
+    const camTurn = await mp.evaluate(async () => {
+      const w = window.__world;
+      const heading = () => Math.atan2(w.followCam.frame.forward.x, w.followCam.frame.forward.z);
+      const h0 = heading();
+      const mk = (id, target, x, y) => new Touch({ identifier: id, target, clientX: x, clientY: y });
+      const fire = (target, type, touches, changed) => target.dispatchEvent(new TouchEvent(type, {
+        touches, targetTouches: [], changedTouches: changed, bubbles: true, cancelable: true,
+      }));
+      const t1 = mk(9, document.body, 700, 300);
+      fire(window, 'touchstart', [t1], [t1]);
+      const t2 = mk(9, document.body, 600, 300);
+      fire(window, 'touchmove', [t2], [t2]);
+      await new Promise((r) => setTimeout(r, 300));
+      fire(window, 'touchend', [], [t2]);
+      const d = Math.abs(heading() - h0);
+      return +Math.min(d, Math.PI * 2 - d).toFixed(2); // normalize the wrap
+    });
+    check('right-side drag orbits the camera', camTurn > 0.2, `turned ${camTurn} rad`);
     await mctx.close();
   }
 

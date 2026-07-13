@@ -20,7 +20,7 @@ function webglAvailable() {
 }
 const canRun3d = webglAvailable();
 
-if (isTouch) controlsHint.textContent = 'drag to move · ACT to interact · JUMP to jump';
+if (isTouch) controlsHint.textContent = 'left thumb: move · right thumb: look · ACT / JUMP buttons';
 
 function dismissBoot() {
   boot.classList.add('leaving');

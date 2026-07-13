@@ -49,6 +49,10 @@ export function createInput() {
   const actionEl = document.getElementById('action-btn');
   const jumpEl = document.getElementById('jump-btn');
   const joy = { active: false, id: null, baseX: 0, baseY: 0, x: 0, y: 0 };
+  // right half of the screen: one-finger camera orbit (works alongside the
+  // joystick — each tracks its own touch identifier)
+  const cam = { active: false, id: null, lastX: 0 };
+  let lookDelta = 0;
 
   if (isTouch) {
     actionEl.hidden = false;
@@ -57,43 +61,57 @@ export function createInput() {
 
     window.addEventListener('touchstart', (e) => {
       for (const t of e.changedTouches) {
+        if (t.target.closest('button, #dialog, #contact-panel, #boot, #fallback')) continue;
         const tx = gameX(t.clientX, t.clientY);
         const ty = gameY(t.clientX, t.clientY);
-        // left 60% of the (game-space) screen steers; buttons/dialogs excluded
-        if (joy.active || tx > viewSize().w * 0.6) continue;
-        if (t.target.closest('button, #dialog, #contact-panel, #boot, #fallback')) continue;
-        joy.active = true;
-        joy.id = t.identifier;
-        joy.baseX = tx;
-        joy.baseY = ty;
-        joyEl.hidden = false;
-        joyEl.style.left = `${tx - 64}px`;
-        joyEl.style.top = `${ty - 64}px`;
-        if (onFirstMove) { onFirstMove(); onFirstMove = null; }
+        if (tx <= viewSize().w * 0.5) {
+          // left half: movement joystick
+          if (joy.active) continue;
+          joy.active = true;
+          joy.id = t.identifier;
+          joy.baseX = tx;
+          joy.baseY = ty;
+          joyEl.hidden = false;
+          joyEl.style.left = `${tx - 64}px`;
+          joyEl.style.top = `${ty - 64}px`;
+          if (onFirstMove) { onFirstMove(); onFirstMove = null; }
+        } else if (!cam.active) {
+          // right half: camera look
+          cam.active = true;
+          cam.id = t.identifier;
+          cam.lastX = tx;
+        }
       }
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
-      if (!joy.active) return;
       for (const t of e.changedTouches) {
-        if (t.identifier !== joy.id) continue;
-        const dx = gameX(t.clientX, t.clientY) - joy.baseX;
-        const dy = gameY(t.clientX, t.clientY) - joy.baseY;
-        const len = Math.hypot(dx, dy) || 1;
-        const clamped = Math.min(len, MAX);
-        joy.x = (dx / len) * (clamped / MAX);
-        joy.y = (dy / len) * (clamped / MAX);
-        knobEl.style.transform = `translate(${(dx / len) * clamped}px, ${(dy / len) * clamped}px)`;
+        if (joy.active && t.identifier === joy.id) {
+          const dx = gameX(t.clientX, t.clientY) - joy.baseX;
+          const dy = gameY(t.clientX, t.clientY) - joy.baseY;
+          const len = Math.hypot(dx, dy) || 1;
+          const clamped = Math.min(len, MAX);
+          joy.x = (dx / len) * (clamped / MAX);
+          joy.y = (dy / len) * (clamped / MAX);
+          knobEl.style.transform = `translate(${(dx / len) * clamped}px, ${(dy / len) * clamped}px)`;
+        } else if (cam.active && t.identifier === cam.id) {
+          const tx = gameX(t.clientX, t.clientY);
+          lookDelta += tx - cam.lastX;
+          cam.lastX = tx;
+        }
       }
     }, { passive: true });
 
     const endTouch = (e) => {
       for (const t of e.changedTouches) {
-        if (t.identifier !== joy.id) continue;
-        joy.active = false;
-        joy.x = joy.y = 0;
-        joyEl.hidden = true;
-        knobEl.style.transform = '';
+        if (joy.active && t.identifier === joy.id) {
+          joy.active = false;
+          joy.x = joy.y = 0;
+          joyEl.hidden = true;
+          knobEl.style.transform = '';
+        } else if (cam.active && t.identifier === cam.id) {
+          cam.active = false;
+        }
       }
     };
     window.addEventListener('touchend', endTouch);
@@ -136,6 +154,11 @@ export function createInput() {
     },
     isSprinting() {
       return keys.has('sprint');
+    },
+    consumeLook() {
+      const v = lookDelta;
+      lookDelta = 0;
+      return v;
     },
     getMove() {
       let x = 0, z = 0;

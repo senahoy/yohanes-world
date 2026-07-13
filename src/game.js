@@ -173,6 +173,9 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
     }
     if (input.consumeInteract() && !uiOpen) quests.tryInteract();
     const wantJump = input.consumeJump() && !uiOpen;
+    // right-thumb camera orbit (touch); consumed every frame so it can't pool
+    const look = input.consumeLook();
+    if (look && !uiOpen) followCam.orbit(look * -0.007);
 
     player.update(dt, uiOpen ? NULL_INPUT : input, t, followCam.frame, wantJump);
     quests.update(dt, t);
