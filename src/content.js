@@ -270,6 +270,20 @@ export const TUTORIAL = {
   ],
 };
 
+// ————— Career ladder: complete QA work, get promoted —————
+export const PROMOTIONS = {
+  'Junior QA': 'PROMOTED: Junior QA. First bug caught and filed. Probation passed.',
+  'QA Engineer': 'PROMOTED: QA Engineer. All six bugs caught, the suite breathes again.',
+  'Senior QA': 'PROMOTED: Senior QA. Every report filed and the regression suite runs itself.',
+  'QA Lead': 'PROMOTED: QA Lead. You resolved a production incident. The pager respects you now.',
+  'Island Legend': 'PROMOTED: Island Legend. There is nothing left to test.',
+};
+
+export const LEGEND_DIALOG = [
+  { tone: 'me', name: 'Yohanes', text: 'Island Legend. You caught every bug, filed every report, automated the pipeline, resolved an incident, harvested the beds, landed the golden edge case, played the piano, and petted the dog.' },
+  { tone: 'me', name: 'Yohanes', text: 'In other words: you just did my whole job. If that felt satisfying, imagine what we could ship together. The satellite dish is warmed up.' },
+];
+
 // Fallback-only extras
 export const FALLBACK_INCIDENT = {
   title: 'War story: the production incident',

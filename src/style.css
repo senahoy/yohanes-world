@@ -64,6 +64,7 @@ button { font: inherit; cursor: pointer; }
 }
 .hud-title { color: var(--brand-bright); }
 .hud-badge { color: var(--accent); border-color: oklch(0.75 0.155 60 / 0.6); }
+.hud-rank { color: var(--brand-bright); text-transform: uppercase; }
 .hud-btn { pointer-events: auto; }
 .hud-btn:hover, .hud-btn:focus-visible { background: oklch(0.3 0.08 285 / 0.9); }
 .hud-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

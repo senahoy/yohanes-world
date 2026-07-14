@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUGS, ALL_BUGS_DONE, INCIDENT, DISH_DIALOG, MAILBOX_DIALOG, CITY, FISH, FISH_RARE, GOLDEN_FISH_DIALOG, HARVEST_DONE_DIALOG, TUTORIAL } from './content.js';
+import { BUGS, ALL_BUGS_DONE, INCIDENT, DISH_DIALOG, MAILBOX_DIALOG, CITY, FISH, FISH_RARE, GOLDEN_FISH_DIALOG, HARVEST_DONE_DIALOG, TUTORIAL, PROMOTIONS, LEGEND_DIALOG } from './content.js';
 import { createBug, createConfetti } from './world/bugs.js';
 import { createCharacter } from './world/character.js';
 import { heightAt } from './world/island.js';
@@ -46,6 +46,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         filed: filedIds,
         ci: ciDone,
         incidentResolved: incident === RESOLVED,
+        extras: { golden: goldenCaught, harvest: harvestStoryTold, dog: dogPetted, piano: pianoPlayed },
       }));
     } catch { /* storage unavailable (private mode) — play on without saving */ }
   }
@@ -119,6 +120,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
             tutorial = 'file';
             setTimeout(() => dialog.show(TUTORIAL.afterCatch), 900);
           }
+          refreshRank();
           if (bugsCaught === BUGS.length) {
             setTimeout(() => {
               confetti.burst(player.position, 70, 4);
@@ -207,6 +209,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
       light.material.color.set(C.screenGreen);
       light.material.emissive.set(C.screenGreen);
     }
+    refreshRank();
   }
 
   interactables.push({
@@ -326,6 +329,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           tutorial = 'done';
           setTimeout(() => dialog.show(TUTORIAL.done), 900);
         }
+        refreshRank();
       });
     },
   };
@@ -370,6 +374,7 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         world.ciScreen.mat.emissiveIntensity = 0.6;
         hud.toast('Regression suite automated. Pipeline GREEN');
         confetti.burst(spots.ciDesk, 24, 2);
+        refreshRank();
       });
     },
   });
@@ -404,6 +409,11 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     label: 'Play piano',
     enabled: () => true,
     onInteract() {
+      if (!pianoPlayed) {
+        pianoPlayed = true;
+        persist();
+        refreshRank();
+      }
       piano.open();
     },
   });
@@ -435,6 +445,8 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
   const bobberBaseY = bobber.position.y;
   const biteWindow = () => (motionReduced() ? 2.2 : 1.2); // live, gentler timing
   let fishState = 'idle'; // idle | waiting | bite
+  let dogPetted = false;
+  let pianoPlayed = false;
   let fishTimer = 0;
   let fishCount = 0;
   let goldenCaught = false;
@@ -470,7 +482,9 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         confetti.burst(bobber.position, rare ? 40 : 16, 2);
         if (rare) {
           goldenCaught = true;
+          persist();
           dialog.show(GOLDEN_FISH_DIALOG);
+          refreshRank();
         }
       }
     },
@@ -497,7 +511,9 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         // clearing the whole row earns the regression-testing story
         if (!harvestStoryTold && world.gourds.every((gg) => !gg.fruit.visible)) {
           harvestStoryTold = true;
+          persist();
           setTimeout(() => dialog.show(HARVEST_DONE_DIALOG), 400);
+          refreshRank();
         }
       },
     });
@@ -515,6 +531,11 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
       sfx.pet();
       hud.toast('Bug the dog approves. Morale fully restored.');
       confetti.burst(dog.root.position, 10, 1.2);
+      if (!dogPetted) {
+        dogPetted = true;
+        persist();
+        refreshRank();
+      }
     },
   });
 
@@ -549,14 +570,50 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
         incident = RESOLVED;
         hud.setBadge(true);
       }
+      const ex = save.extras || {};
+      goldenCaught = !!ex.golden;
+      harvestStoryTold = !!ex.harvest;
+      dogPetted = !!ex.dog;
+      pianoPlayed = !!ex.piano;
       if (bugsCaught > 0 || save.ci || save.incidentResolved) {
         setTimeout(() => hud.toast('progress restored, welcome back'), 1200);
       }
     }
   }
 
+  // ——— career ladder: complete QA work, get promoted ———
+  const RANKS = ['New Hire', 'Junior QA', 'QA Engineer', 'Senior QA', 'QA Lead', 'Island Legend'];
+  let rankIndex = 0;
+  function refreshRank(announce = true) {
+    let idx = 0;
+    if (bugsFiled >= 1) idx = 1;
+    if (bugsCaught >= BUGS.length) idx = 2;
+    if (bugsFiled >= BUGS.length && ciDone) idx = 3;
+    if (incident === RESOLVED) idx = 4;
+    if (idx === 4 && bugsCaught >= BUGS.length && bugsFiled >= BUGS.length && ciDone
+      && goldenCaught && harvestStoryTold && dogPetted && pianoPlayed) idx = 5;
+    if (idx <= rankIndex) {
+      hud.setRank(RANKS[rankIndex]);
+      return;
+    }
+    rankIndex = idx;
+    hud.setRank(RANKS[idx]);
+    if (!announce) return;
+    sfx.catch();
+    hud.toast(PROMOTIONS[RANKS[idx]] || `PROMOTED: ${RANKS[idx]}`, 4200);
+    confetti.burst(player.position, 40, 3);
+    if (idx === RANKS.length - 1) {
+      // the grand finale funnels straight to the hiring conversation
+      for (let i = 1; i <= 3; i++) {
+        setTimeout(() => confetti.burst(player.position, 60, 4), i * 500);
+      }
+      setTimeout(() => dialog.show(LEGEND_DIALOG, () => contact.open()), 1800);
+    }
+  }
+
   // ——— first-run tutorial: derive the step from (restored) progress ———
   let tutorial = bugsFiled > 0 ? 'done' : bugsCaught > 0 ? 'file' : 'catch';
+  refreshRank(false); // restore the rank chip without fanfare
   if (tutorial === 'catch') {
     setTimeout(() => {
       if (tutorial === 'catch' && !dialog.isOpen()) dialog.show(TUTORIAL.intro);

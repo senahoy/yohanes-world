@@ -93,6 +93,8 @@ async function main() {
   const obj1 = await page.evaluate(() =>
     document.getElementById('hud-objective').hidden ? null : document.getElementById('hud-obj-label').textContent);
   check('tutorial mission 1: catch', !!obj1 && obj1.includes('catch'), obj1 || 'banner hidden');
+  const rank0 = await page.evaluate(() => document.getElementById('hud-rank').textContent);
+  check('career ladder starts at New Hire', rank0 === 'New Hire', rank0);
 
   // ——— audio: context unlocks, mute toggles + persists ———
   await page.keyboard.press('KeyW');
@@ -181,6 +183,8 @@ async function main() {
   await dismissDialog();
   const objDone = await page.evaluate(() => document.getElementById('hud-objective').hidden);
   check('tutorial complete: mission banner clears', objDone);
+  const rank1 = await page.evaluate(() => document.getElementById('hud-rank').textContent);
+  check('first filing earns the Junior QA promotion', rank1 === 'Junior QA', rank1);
 
   // ——— automate the CI ———
   await teleport('w.world.spots.ciDesk', -1.3, 0);
@@ -349,8 +353,9 @@ async function main() {
     bugs: document.getElementById('hud-bugs').textContent,
     ci: window.__world.world.ciScreen.mat.color.getHexString(),
     badge: !document.getElementById('hud-badge').hidden,
+    rank: document.getElementById('hud-rank').textContent,
   }));
-  check('progress restored after reload', restored.bugs === '🐛 1/6' && restored.ci === '5edb81' && restored.badge,
+  check('progress restored after reload', restored.bugs === '🐛 1/6' && restored.ci === '5edb81' && restored.badge && restored.rank === 'QA Lead',
     JSON.stringify(restored));
 
   // ——— procedural fallback world (no assets) ———

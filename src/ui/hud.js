@@ -3,6 +3,7 @@ import { PROFILE } from '../content.js';
 export function createHud() {
   const hud = document.getElementById('hud');
   const bugsEl = document.getElementById('hud-bugs');
+  const rankEl = document.getElementById('hud-rank');
   const badgeEl = document.getElementById('hud-badge');
   const alertEl = document.getElementById('hud-alert');
   const promptEl = document.getElementById('hud-prompt');
@@ -71,6 +72,7 @@ export function createHud() {
         objDist.textContent = `${d}m`;
       }
     },
+    setRank(label) { rankEl.textContent = label; },
     setBugs(n, total) { bugsEl.textContent = `🐛 ${n}/${total}`; },
     setBadge(visible) { badgeEl.hidden = !visible; },
     setAlert(visible) { alertEl.hidden = !visible; },
