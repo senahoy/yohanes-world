@@ -255,6 +255,21 @@ export const DISH_DIALOG = [
   { tone: 'me', name: 'Yohanes', text: 'Every great project starts with a simple conversation. Send me a signal!' },
 ];
 
+// ————— First-run tutorial: one guided catch-and-report, then freedom —————
+export const TUTORIAL = {
+  intro: [
+    { tone: 'me', name: 'Yohanes', text: 'Welcome to the island. Quick briefing: six bugs escaped my test suite this morning, and QA is short-staffed. That makes you the new hire.' },
+    { tone: 'me', name: 'Yohanes', text: 'One just glitched out near the landing pad. Follow the compass at the bottom of the screen, walk up to the bug, and catch it.' },
+  ],
+  afterCatch: [
+    { tone: 'me', name: 'Yohanes', text: 'Clean catch. Now the part that separates seniors from juniors: the report. Take it to the kanban board in the city district, east along the path. The compass knows the way.' },
+  ],
+  done: [
+    { tone: 'me', name: 'Yohanes', text: "And that's the job: catch, investigate, report. The other five bugs are hiding around the island; the minimap marks them in magenta." },
+    { tone: 'me', name: 'Yohanes', text: 'Take your time. There is a farm, a piano, a fishing dock, and something humming behind the graveyard fence that is definitely none of your business.' },
+  ],
+};
+
 // Fallback-only extras
 export const FALLBACK_INCIDENT = {
   title: 'War story: the production incident',

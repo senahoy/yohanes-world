@@ -64,6 +64,16 @@ async function main() {
     }
   };
   const bugsHud = () => page.evaluate(() => document.getElementById('hud-bugs').textContent);
+  // fresh worlds open the tutorial intro dialog ~1.6s after boot
+  const dismissDialog = async (p = page) => {
+    await p.waitForTimeout(2000);
+    for (let i = 0; i < 10; i++) {
+      const open = await p.evaluate(() => !document.getElementById('dialog').hidden);
+      if (!open) break;
+      await p.evaluate(() => document.getElementById('dialog-next').click());
+      await p.waitForTimeout(200);
+    }
+  };
 
   // ——— text fallback ———
   console.log('text fallback');
@@ -79,6 +89,10 @@ async function main() {
   await page.waitForTimeout(2000);
   check('world boots without page errors', pageErrors.length === 0, pageErrors[0] || '');
   check('bug counter starts at 0/6', (await bugsHud()) === '🐛 0/6', await bugsHud());
+  await dismissDialog();
+  const obj1 = await page.evaluate(() =>
+    document.getElementById('hud-objective').hidden ? null : document.getElementById('hud-obj-label').textContent);
+  check('tutorial mission 1: catch', !!obj1 && obj1.includes('catch'), obj1 || 'banner hidden');
 
   // ——— audio: context unlocks, mute toggles + persists ———
   await page.keyboard.press('KeyW');
@@ -150,6 +164,10 @@ async function main() {
     await page.waitForTimeout(250);
   }
   check('bug caught exactly once', (await bugsHud()) === '🐛 1/6', await bugsHud());
+  await dismissDialog();
+  const obj2 = await page.evaluate(() =>
+    document.getElementById('hud-objective').hidden ? null : document.getElementById('hud-obj-label').textContent);
+  check('tutorial mission 2: file', !!obj2 && obj2.includes('file'), obj2 || 'banner hidden');
 
   // ——— file the report (approach from the north — the PM paces just south) ———
   await teleport('w.world.spots.kanban', 0, 1.7);
@@ -160,6 +178,9 @@ async function main() {
   const stickyFlipped = await page.evaluate(() =>
     !window.__world.world.todoStickies[0].visible && window.__world.world.doneStickies[0].visible);
   check('kanban filing flips a sticky', stickyFlipped);
+  await dismissDialog();
+  const objDone = await page.evaluate(() => document.getElementById('hud-objective').hidden);
+  check('tutorial complete: mission banner clears', objDone);
 
   // ——— automate the CI ———
   await teleport('w.world.spots.ciDesk', -1.3, 0);
@@ -215,6 +236,7 @@ async function main() {
         canvas: [c.width, c.height],
       };
     });
+    await dismissDialog(mp); // clear the tutorial intro before driving input
     const portraitMove = await mp.evaluate(async () => {
       const w = window.__world;
       const mk = (id, target, x, y) => new Touch({ identifier: id, target, clientX: x, clientY: y });
@@ -295,7 +317,7 @@ async function main() {
     const rp = await rctx.newPage();
     await rp.goto(`${BASE}/?mode=world&reset`);
     await rp.waitForFunction(() => window.__world, null, { timeout: 30000 });
-    await rp.waitForTimeout(1200);
+    await dismissDialog(rp);
     const before = await rp.evaluate(() => ({
       reduced: window.__world.motion.reduced(),
       chipVisible: !document.getElementById('hud-motion').hidden,

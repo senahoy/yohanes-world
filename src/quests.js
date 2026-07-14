@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUGS, ALL_BUGS_DONE, INCIDENT, DISH_DIALOG, MAILBOX_DIALOG, CITY, FISH, FISH_RARE, GOLDEN_FISH_DIALOG, HARVEST_DONE_DIALOG } from './content.js';
+import { BUGS, ALL_BUGS_DONE, INCIDENT, DISH_DIALOG, MAILBOX_DIALOG, CITY, FISH, FISH_RARE, GOLDEN_FISH_DIALOG, HARVEST_DONE_DIALOG, TUTORIAL } from './content.js';
 import { createBug, createConfetti } from './world/bugs.js';
 import { createCharacter } from './world/character.js';
 import { heightAt } from './world/island.js';
@@ -115,8 +115,9 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           persist();
           hud.setBugs(bugsCaught, BUGS.length);
           hud.toast(`${bugDef.name} squashed · ${bugDef.chapter} unlocked`);
-          if (bugsCaught === 1) {
-            setTimeout(() => hud.toast('file the report on the kanban board (city district)', 3400), 1400);
+          if (tutorial === 'catch') {
+            tutorial = 'file';
+            setTimeout(() => dialog.show(TUTORIAL.afterCatch), 900);
           }
           if (bugsCaught === BUGS.length) {
             setTimeout(() => {
@@ -320,6 +321,10 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
           : `${bugDef.name} filed · ${bugsFiled}/${BUGS.length}`);
         if (bugsFiled === BUGS.length) {
           confetti.burst(spots.kanban, 30, 2.5);
+        }
+        if (tutorial === 'file') {
+          tutorial = 'done';
+          setTimeout(() => dialog.show(TUTORIAL.done), 900);
         }
       });
     },
@@ -550,6 +555,14 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
     }
   }
 
+  // ——— first-run tutorial: derive the step from (restored) progress ———
+  let tutorial = bugsFiled > 0 ? 'done' : bugsCaught > 0 ? 'file' : 'catch';
+  if (tutorial === 'catch') {
+    setTimeout(() => {
+      if (tutorial === 'catch' && !dialog.isOpen()) dialog.show(TUTORIAL.intro);
+    }, 1600);
+  }
+
   // ——— per-frame ———
   let current = null;
   const npcRigs = [opsBot, pm, engineer, designer];
@@ -558,6 +571,11 @@ export function createQuests({ scene, world, player, dialog, hud, contact, piano
 
   return {
     getAlertTarget: () => alertTarget,
+    getObjective() {
+      if (tutorial === 'catch') return { label: 'catch the escaped bug', pos: spots.bugs.nullpointer };
+      if (tutorial === 'file') return { label: 'file the report at the kanban', pos: spots.kanban };
+      return null;
+    },
     getMapMarkers() {
       const markers = [];
       for (const bug of bugEntities.values()) {

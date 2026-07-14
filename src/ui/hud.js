@@ -13,6 +13,12 @@ export function createHud() {
   const textBtn = document.getElementById('hud-text-mode');
   const muteBtn = document.getElementById('hud-mute');
   const motionBtn = document.getElementById('hud-motion');
+  const objEl = document.getElementById('hud-objective');
+  const objLabel = document.getElementById('hud-obj-label');
+  const objArrow = document.getElementById('hud-obj-arrow');
+  const objDist = document.getElementById('hud-obj-dist');
+  let objCurrentLabel = null;
+  let objCurrentDist = -1;
   const fsBtn = document.getElementById('hud-fullscreen');
 
   // fullscreen: ⛶ chip + F key (hidden where the API doesn't exist, e.g. iPhone)
@@ -50,6 +56,20 @@ export function createHud() {
       motionBtn.textContent = reduced ? '🍃' : '✨';
       motionBtn.title = reduced ? 'Enable full animation' : 'Reduce animation';
       motionBtn.setAttribute('aria-pressed', reduced ? 'true' : 'false');
+    },
+    setObjective(label) {
+      if (label === objCurrentLabel) return;
+      objCurrentLabel = label;
+      objEl.hidden = !label;
+      if (label) objLabel.textContent = label;
+    },
+    updateCompass(relAngle, dist) {
+      objArrow.style.transform = `rotate(${relAngle}rad)`;
+      const d = Math.round(dist);
+      if (d !== objCurrentDist) {
+        objCurrentDist = d;
+        objDist.textContent = `${d}m`;
+      }
     },
     setBugs(n, total) { bugsEl.textContent = `🐛 ${n}/${total}`; },
     setBadge(visible) { badgeEl.hidden = !visible; },

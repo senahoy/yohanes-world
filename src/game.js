@@ -147,7 +147,9 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
       setTimeout(() => hud.toast('reduced-motion mode. tap the leaf chip for full animation', 4200), 3000);
     }
   }
-  setTimeout(() => hud.toast('follow the paths. they link every district', 3800), 2200);
+  if (!quests.getObjective()) {
+    setTimeout(() => hud.toast('follow the paths. they link every district', 3800), 2200);
+  }
   hud.onTextMode(() => {
     window.location.search = '?mode=text';
   });
@@ -180,6 +182,17 @@ export async function startGame({ reducedMotion = false, onProgress = null } = {
     player.update(dt, uiOpen ? NULL_INPUT : input, t, followCam.frame, wantJump);
     quests.update(dt, t);
     minimap.update(t, player, quests.getMapMarkers());
+
+    // mission banner + compass (points relative to the camera heading)
+    const objective = quests.getObjective();
+    hud.setObjective(objective ? objective.label : null);
+    if (objective) {
+      const dx = objective.pos.x - player.position.x;
+      const dz = objective.pos.z - player.position.z;
+      const f = followCam.frame.forward;
+      const rel = Math.atan2(f.x * dz - f.z * dx, f.x * dx + f.z * dz);
+      hud.updateCompass(rel, Math.hypot(dx, dz));
+    }
 
     // incident sky: gentle crossfade
     const alert = sky.getAlert();
